@@ -5,7 +5,7 @@
 ## Install
 
 ```bash
-$ pip install fhacking
+$ pip install https://github.com/disktnk/fhacking/releases/download/v1.1.1.dev14/fhacking-1.1.1.dev14.tar.gz
 ```
 
 ## Notes
