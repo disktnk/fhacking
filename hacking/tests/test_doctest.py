@@ -16,7 +16,7 @@
 
 import re
 
-from flake8 import engine
+from flake8.api import legacy as flake8
 import pycodestyle
 
 import pkg_resources
@@ -39,18 +39,14 @@ class HackingTestCase(hacking.tests.TestCase):
 
     def test_pycodestyle(self):
 
-        # NOTE(jecarey): Add tests marked as off_by_default to enable testing
-        turn_on = set(['H106', 'H203', 'H904', 'H204', 'H205', 'H210'])
-        if self.options.select:
-            turn_on.update(self.options.select)
-        self.options.select = tuple(turn_on)
-
-        report = pycodestyle.BaseReport(self.options)
-        checker = pycodestyle.Checker(lines=self.lines, options=self.options,
-                                      report=report)
+        ignore = []
+        if self.code != 'H104':
+            ignore = ['H104']
+        checker = pycodestyle.Checker(lines=self.lines, quiet=True, ignore=ignore)
         checker.check_all()
         self.addDetail('doctest', content.text_content(self.raw))
         if self.code == 'Okay':
+            report = checker.report
             self.assertThat(
                 len(report.counters),
                 matchers.Not(matchers.GreaterThan(
@@ -62,7 +58,7 @@ class HackingTestCase(hacking.tests.TestCase):
             self.addDetail('reason',
                            content.text_content("Failed to trigger rule %s" %
                                                 self.code))
-            self.assertIn(self.code, report.counters)
+            self.assertIn(self.code, checker.report.counters)
 
 
 def _get_lines(check):
@@ -76,11 +72,11 @@ def _get_lines(check):
 
 def load_tests(loader, tests, pattern):
 
-    flake8_style = engine.get_style_guide(parse_argv=False,
-                                          # Ignore H104 otherwise it's
-                                          # raised on doctests.
-                                          ignore=('F', 'H104'))
-    options = flake8_style.options
+    flake8.get_style_guide(parse_argv=False,
+                           # Ignore H104 otherwise it's
+                           # raised on doctests.
+                           ignore=('F', 'H104'))
+    options = pycodestyle.StyleGuide(quiet=True).options
 
     for entry in pkg_resources.iter_entry_points('flake8.extension'):
         if not entry.module_name.startswith('hacking.'):

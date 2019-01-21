@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from flake8 import engine
+from flake8.api import legacy as flake8
 import pycodestyle
 
 import hacking.tests
@@ -27,10 +27,8 @@ def check(physical_line):
 
 class HackingTestCase(hacking.tests.TestCase):
     def test_local_check(self):
-        flake8_style = engine.get_style_guide(parse_argv=False, ignore='F')
-        report = pycodestyle.BaseReport(flake8_style.options)
+        flake8.get_style_guide(parse_argv=False, ignore='F')
         line = ["#this-is-the-test-phrase"]
-        checker = pycodestyle.Checker(lines=line, options=flake8_style.options,
-                                      report=report)
+        checker = pycodestyle.Checker(lines=line, quiet=True)
         checker.check_all()
-        self.assertIn("L100", report.counters)
+        self.assertIn("L100", checker.report.counters)
